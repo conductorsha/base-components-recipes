@@ -53,14 +53,7 @@ export default class cTreeItem extends LightningElement {
     }
 
     get isToShowPagination() {
-        // console.log(
-        //     "My items current page",
-        //     this.currentPage,
-        //     " ",
-        //     this.maximumChildPages
-        // );
-        console.log(this.maximumChildPages);
-        return 0 < this.maximumChildPages;
+        return this.currentPage < this.maximumChildPages;
     }
 
     set focusedChild(value) {

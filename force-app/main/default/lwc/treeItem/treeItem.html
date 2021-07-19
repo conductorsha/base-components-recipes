@@ -28,7 +28,7 @@
                     is-leaf={item.node.isLeaf}
                     child-items={item.node.children}
                     maximum-child-pages={item.node.maximumChildPages}
-                    current-page={currentPage}
+                    current-page={item.node.currentPage}
                 >
                 </c-tree-item>
             </template>
@@ -54,7 +54,7 @@
                     aria-expanded={item.node.strexpanded}
                     aria-disabled={item.node.isDisabled}
                     maximum-child-pages={item.node.maximumChildPages}
-                    current-page={currentPage}
+                    current-page={item.node.currentPage}
                 >
                 </c-tree-item>
             </template>
@@ -140,7 +140,7 @@
                             is-leaf={item.node.isLeaf}
                             child-items={item.node.children}
                             maximum-child-pages={item.node.maximumChildPages}
-                            current-page={currentPage}
+                            current-page={item.node.currentPage}
                         >
                         </c-tree-item>
                     </template>
@@ -166,7 +166,7 @@
                             aria-label={item.node.label}
                             aria-expanded={item.node.strexpanded}
                             maximum-child-pages={item.node.maximumChildPages}
-                            current-page={currentPage}
+                            current-page={item.node.currentPage}
                         >
                         </c-tree-item>
                     </template>
