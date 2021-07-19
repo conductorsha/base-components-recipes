@@ -5,8 +5,8 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
 
-import { getTreeNode } from './treeNode';
-import { assert } from 'c/utilsPrivate';
+import { getTreeNode } from "./treeNode";
+import { assert } from "c/utilsPrivate";
 
 export class TreeData {
     constructor() {
@@ -60,7 +60,9 @@ export class TreeData {
             metatext: item.metatext,
             href: item.href,
             disabled: item.disabled,
-            items: []
+            items: [],
+            maximumChildPages: item.maximumChildPages,
+            currentPage: item.currentPage
         };
 
         if (item.items && item.items.length > 0) {
@@ -122,7 +124,7 @@ export class TreeData {
 
                 if (
                     // eslint-disable-next-line no-prototype-builtins
-                    currentNode.hasOwnProperty('items') &&
+                    currentNode.hasOwnProperty("items") &&
                     Array.isArray(currentNode.items)
                 ) {
                     for (
@@ -184,7 +186,7 @@ export class TreeData {
         if (node) {
             let parentKey = node.parent;
             let parentNode = this._indices[parentKey];
-            while (parentKey && parentKey !== '0' && parentNode) {
+            while (parentKey && parentKey !== "0" && parentNode) {
                 parentKey = parentNode.parent;
                 parentNode = parentNode.treeNode;
                 if (!parentNode.nodeRef.expanded) {
@@ -258,7 +260,7 @@ export class TreeData {
     }
 
     getItemFromName(itemName) {
-        if (typeof itemName === 'string') {
+        if (typeof itemName === "string") {
             const itemKey = this.nameKeyMapping[itemName];
             if (itemKey) {
                 const item = this.getItem(itemKey);
@@ -328,7 +330,7 @@ export class TreeData {
     }
 
     getChildNum(key) {
-        const idx = key.lastIndexOf('.');
+        const idx = key.lastIndexOf(".");
         return idx > -1
             ? parseInt(key.substring(idx + 1), 10) - 1
             : parseInt(key, 10) - 1;

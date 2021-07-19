@@ -5,11 +5,11 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
 
-import labelCollapseBranch from '@salesforce/label/c.lightning_LightningTree_collapseBranch';
-import labelExpandBranch from '@salesforce/label/c.lightning_LightningTree_expandBranch';
-import { LightningElement, api, track } from 'lwc';
-import { classSet } from 'c/utils';
-import { keyCodes } from 'c/utilsPrivate';
+import labelCollapseBranch from "@salesforce/label/c.lightning_LightningTree_collapseBranch";
+import labelExpandBranch from "@salesforce/label/c.lightning_LightningTree_expandBranch";
+import { LightningElement, api, track } from "lwc";
+import { classSet } from "c/utils";
+import { keyCodes } from "c/utilsPrivate";
 
 const i18n = {
     collapseBranch: labelCollapseBranch,
@@ -20,7 +20,8 @@ export default class cTreeItem extends LightningElement {
     @track _children = [];
     @track _tabindexes = {};
     @track _selected = {};
-
+    @api maximumChildPages;
+    @api currentPage;
     _focusedChild = null;
 
     @api isRoot = false;
@@ -43,12 +44,23 @@ export default class cTreeItem extends LightningElement {
         this._children = value;
         const childLen = this._children.length;
         for (let i = 0; i < childLen; i++) {
-            this.setSelectedAttribute(i, 'false');
+            this.setSelectedAttribute(i, "false");
         }
     }
 
     @api get focusedChild() {
         return this._focusedChild;
+    }
+
+    get isToShowPagination() {
+        // console.log(
+        //     "My items current page",
+        //     this.currentPage,
+        //     " ",
+        //     this.maximumChildPages
+        // );
+        console.log(this.maximumChildPages);
+        return 0 < this.maximumChildPages;
     }
 
     set focusedChild(value) {
@@ -61,7 +73,7 @@ export default class cTreeItem extends LightningElement {
 
     connectedCallback() {
         this.dispatchEvent(
-            new CustomEvent('privateregisteritem', {
+            new CustomEvent("privateregisteritem", {
                 composed: true,
                 bubbles: true,
                 detail: {
@@ -72,14 +84,14 @@ export default class cTreeItem extends LightningElement {
             })
         );
 
-        this.addEventListener('keydown', this.handleKeydown.bind(this));
+        this.addEventListener("keydown", this.handleKeydown.bind(this));
     }
 
     renderedCallback() {
-        if (typeof this.focusedChild === 'number') {
+        if (typeof this.focusedChild === "number") {
             const child = this.getNthChildItem(this.focusedChild + 1);
             if (child) {
-                child.tabIndex = '0';
+                child.tabIndex = "0";
             }
         }
     }
@@ -99,20 +111,21 @@ export default class cTreeItem extends LightningElement {
     }
 
     get computedButtonClass() {
-        return classSet('slds-button slds-button_icon slds-m-right_x-small ')
+        return classSet("slds-button slds-button_icon slds-m-right_x-small ")
             .add({
-                'slds-hidden': this.isLeaf || this.isDisabled
+                "slds-hidden": this.isLeaf || this.isDisabled
             })
             .toString();
     }
 
     get computedIconName() {
-        return document.dir === 'rtl'
-            ? 'utility:chevronleft'
-            : 'utility:chevronright';
+        return document.dir === "rtl"
+            ? "utility:chevronleft"
+            : "utility:chevronright";
     }
 
     get children() {
+        console.log(JSON.parse(JSON.stringify(this._children)));
         return this._children.map((child, idx) => {
             return {
                 node: child,
@@ -130,17 +143,17 @@ export default class cTreeItem extends LightningElement {
     handleClick(event) {
         if (!this.isDisabled) {
             // eslint-disable-next-line no-script-url
-            if (this.href === 'javascript:void(0)') {
+            if (this.href === "javascript:void(0)") {
                 event.preventDefault();
             }
-            let target = 'anchor';
+            let target = "anchor";
             if (
-                event.target.tagName === 'BUTTON' ||
-                event.target.tagName === 'C-PRIMITIVE-ICON'
+                event.target.tagName === "BUTTON" ||
+                event.target.tagName === "C-PRIMITIVE-ICON"
             ) {
-                target = 'chevron';
+                target = "chevron";
             }
-            const customEvent = new CustomEvent('privateitemclick', {
+            const customEvent = new CustomEvent("privateitemclick", {
                 bubbles: true,
                 composed: true,
                 cancelable: true,
@@ -150,9 +163,22 @@ export default class cTreeItem extends LightningElement {
                     target
                 }
             });
-
             this.dispatchEvent(customEvent);
         }
+    }
+
+    loadMoreEvent() {
+        console.log("Received event!");
+        const customEvent = new CustomEvent("loadmorerecords", {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            detail: {
+                name: this.nodename,
+                key: this.nodeKey
+            }
+        });
+        this.dispatchEvent(customEvent);
     }
 
     handleKeydown(event) {
@@ -160,7 +186,7 @@ export default class cTreeItem extends LightningElement {
             case keyCodes.space:
             case keyCodes.enter:
                 this.preventDefaultAndStopPropagation(event);
-                this.template.querySelector('.slds-tree__item a').click();
+                this.template.querySelector(".slds-tree__item a").click();
                 break;
             case keyCodes.up:
             case keyCodes.down:
@@ -170,7 +196,7 @@ export default class cTreeItem extends LightningElement {
             case keyCodes.end:
                 this.preventDefaultAndStopPropagation(event);
                 this.dispatchEvent(
-                    new CustomEvent('privateitemkeydown', {
+                    new CustomEvent("privateitemkeydown", {
                         bubbles: true,
                         composed: true,
                         cancelable: true,
@@ -203,15 +229,15 @@ export default class cTreeItem extends LightningElement {
     }
 
     handleFocus() {
-        this.fireCustomEvent('privatechildfocused', this.nodeKey);
+        this.fireCustomEvent("privatechildfocused", this.nodeKey);
     }
 
     handleBlur() {
-        this.fireCustomEvent('privatechildunfocused', this.nodeKey);
+        this.fireCustomEvent("privatechildunfocused", this.nodeKey);
     }
 
     getChildNum(childKey) {
-        const idx = childKey.lastIndexOf('.');
+        const idx = childKey.lastIndexOf(".");
         const childNum =
             idx > -1
                 ? parseInt(childKey.substring(idx + 1), 10)
@@ -222,8 +248,8 @@ export default class cTreeItem extends LightningElement {
     makeChildFocusable(childKey, shouldFocus, shouldSelect) {
         const child = this.getImmediateChildItem(childKey);
         if (child) {
-            if (child.tabIndex !== '0') {
-                child.tabIndex = '0';
+            if (child.tabIndex !== "0") {
+                child.tabIndex = "0";
             }
             if (shouldFocus) {
                 child.focus();
@@ -235,8 +261,8 @@ export default class cTreeItem extends LightningElement {
     }
 
     makeChildUnfocusable() {
-        this.ariaSelected = 'false';
-        this.removeAttribute('tabindex');
+        this.ariaSelected = "false";
+        this.removeAttribute("tabindex");
     }
 
     getImmediateChildItem(key) {
@@ -247,7 +273,7 @@ export default class cTreeItem extends LightningElement {
 
     getNthChildItem(n) {
         return this.template.querySelector(
-            'c-tree-item:nth-of-type(' + n + ')'
+            "c-tree-item:nth-of-type(" + n + ")"
         );
     }
 }

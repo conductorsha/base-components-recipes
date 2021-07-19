@@ -7,15 +7,16 @@
 
 function computeKey(parentKey, childNum) {
     if (!parentKey) {
-        return '0';
+        return "0";
     }
-    if (parentKey === '0') {
+    if (parentKey === "0") {
         return `${childNum}`;
     }
     return `${parentKey}.${childNum}`;
 }
 
 export function getTreeNode(node, level, parentKey, childNum) {
+    console.log("Im creating records!", node);
     return {
         name: node.name,
         label: node.label,
@@ -23,7 +24,7 @@ export function getTreeNode(node, level, parentKey, childNum) {
         level,
         key: computeKey(parentKey, childNum),
         // eslint-disable-next-line no-script-url
-        href: node.href || 'javascript:void(0)',
+        href: node.href || "javascript:void(0)",
         isDisabled: node.disabled || false,
         visible: level === 1,
         children: [],
@@ -37,10 +38,11 @@ export function getTreeNode(node, level, parentKey, childNum) {
         },
         focusedChild: null,
         get strexpanded() {
-            return (this.isLeaf
-                ? true
-                : this.nodeRef.expanded || false
+            return (
+                this.isLeaf ? true : this.nodeRef.expanded || false
             ).toString();
-        }
+        },
+        maximumChildPages: node.maximumChildPages,
+        currentPage: node.currentPage
     };
 }

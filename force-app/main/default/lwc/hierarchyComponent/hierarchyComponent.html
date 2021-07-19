@@ -1,0 +1,18 @@
+<template>
+    <template if:true={isTreeLoading}>
+        <lightning-spinner
+            alternative-text="Loading"
+            size="medium"
+        ></lightning-spinner>
+    </template>
+    <template if:false={isTreeLoading}>
+        <c-tree
+            items={items}
+            header="Records"
+            selected-item={selectedItem}
+            onselect={handleSelect}
+            onexpandcollapse={handleToggle}
+        >
+        </c-tree>
+    </template>
+</template>

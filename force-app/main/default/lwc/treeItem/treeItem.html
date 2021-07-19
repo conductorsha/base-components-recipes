@@ -27,6 +27,8 @@
                     nodename={item.node.name}
                     is-leaf={item.node.isLeaf}
                     child-items={item.node.children}
+                    maximum-child-pages={item.node.maximumChildPages}
+                    current-page={currentPage}
                 >
                 </c-tree-item>
             </template>
@@ -51,9 +53,14 @@
                     aria-label={item.node.label}
                     aria-expanded={item.node.strexpanded}
                     aria-disabled={item.node.isDisabled}
+                    maximum-child-pages={item.node.maximumChildPages}
+                    current-page={currentPage}
                 >
                 </c-tree-item>
             </template>
+        </template>
+        <template if:true={isToShowPagination}>
+            <button onclick={loadMoreEvent}>paginationButton</button>
         </template>
     </template>
     <template if:false={isRoot}>
@@ -132,6 +139,8 @@
                             nodename={item.node.name}
                             is-leaf={item.node.isLeaf}
                             child-items={item.node.children}
+                            maximum-child-pages={item.node.maximumChildPages}
+                            current-page={currentPage}
                         >
                         </c-tree-item>
                     </template>
@@ -156,9 +165,14 @@
                             child-items={item.node.children}
                             aria-label={item.node.label}
                             aria-expanded={item.node.strexpanded}
+                            maximum-child-pages={item.node.maximumChildPages}
+                            current-page={currentPage}
                         >
                         </c-tree-item>
                     </template>
+                </template>
+                <template if:true={isToShowPagination}>
+                    <button onclick={loadMoreEvent}>paginationButton</button>
                 </template>
             </div>
         </template>

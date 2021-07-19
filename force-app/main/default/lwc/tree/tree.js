@@ -5,9 +5,9 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
 
-import { LightningElement, api, track } from 'lwc';
-import { TreeData } from './treeData';
-import { keyCodes, deepCopy } from 'c/utilsPrivate';
+import { LightningElement, api, track } from "lwc";
+import { TreeData } from "./treeData";
+import { keyCodes, deepCopy } from "c/utilsPrivate";
 
 export default class cTree extends LightningElement {
     @api header;
@@ -17,8 +17,7 @@ export default class cTree extends LightningElement {
     @track _key;
     @track _focusedChild = null;
     @track _items = [];
-
-    _defaultFocused = { key: '1', parent: '0' };
+    _defaultFocused = { key: "1", parent: "0" };
     _selected = null;
     @track _selectedItem = null;
     hasDetachedListeners = true;
@@ -28,19 +27,24 @@ export default class cTree extends LightningElement {
         this.callbackMap = {};
         this.treedata = null;
         this.template.addEventListener(
-            'privateitemkeydown',
+            "privateitemkeydown",
             this.handleKeydown.bind(this)
         );
 
         this.template.addEventListener(
-            'privateitemclick',
+            "privateitemclick",
             this.handleClick.bind(this)
         );
 
         this.template.addEventListener(
-            'privateregisteritem',
+            "privateregisteritem",
             this.handleRegistration.bind(this)
         );
+
+        // this.template.addEventListener(
+        //     "loadmorerecords",
+        //     this.loadMoreRecords.bind(this)
+        // );
     }
 
     @api get items() {
@@ -132,7 +136,7 @@ export default class cTree extends LightningElement {
         if (
             this._currentFocusedItem &&
             relatedTarget &&
-            relatedTarget.tagName !== 'C-TREE-ITEM'
+            relatedTarget.tagName !== "C-TREE-ITEM"
         ) {
             this.setFocusToItem(this._currentFocusedItem, false);
         }
@@ -144,11 +148,11 @@ export default class cTree extends LightningElement {
         }
         if (this.hasDetachedListeners) {
             const container = this.template.querySelector(
-                '.slds-tree_container'
+                ".slds-tree_container"
             );
 
             container.addEventListener(
-                'focus',
+                "focus",
                 this.handleTreeFocusIn.bind(this)
             );
 
@@ -165,7 +169,7 @@ export default class cTree extends LightningElement {
         const target = event.detail.target;
         const item = this.treedata.getItem(key);
         if (item) {
-            if (target === 'chevron') {
+            if (target === "chevron") {
                 if (item.treeNode.nodeRef.expanded) {
                     this.collapseBranch(item.treeNode);
                 } else {
@@ -178,7 +182,18 @@ export default class cTree extends LightningElement {
             }
         }
     }
+    // loadMoreRecords(event) {
+    //     const key = event.detail.key;
+    //     const item = this.treedata.getItem(key);
 
+    //     this.dispatchEvent(
+    //         new CustomEvent("loadmorerecords", {
+    //             detail: {
+    //                 itemName: item.treeNode.name
+    //             }
+    //         })
+    //     );
+    // }
     expandBranch(node) {
         if (!node.isLeaf && !node.isDisabled) {
             node.nodeRef.expanded = true;
@@ -193,9 +208,11 @@ export default class cTree extends LightningElement {
             }
 
             this.dispatchEvent(
-                new CustomEvent('change', {
+                new CustomEvent("expandcollapse", {
                     detail: {
-                        items: deepCopy(this._items)
+                        items: deepCopy(this._items),
+                        itemName: node.name,
+                        eventName: "expand"
                     }
                 })
             );
@@ -208,8 +225,12 @@ export default class cTree extends LightningElement {
             this.treedata.updateVisibleTreeItemsOnCollapse(node.key);
 
             this.dispatchEvent(
-                new CustomEvent('change', {
-                    detail: { items: deepCopy(this._items) }
+                new CustomEvent("expandcollapse", {
+                    detail: {
+                        items: deepCopy(this._items),
+                        itemName: node.name,
+                        eventName: "collapse"
+                    }
                 })
             );
         }
@@ -217,7 +238,7 @@ export default class cTree extends LightningElement {
 
     dispatchSelectEvent(node) {
         if (!node.isDisabled) {
-            const customEvent = new CustomEvent('select', {
+            const customEvent = new CustomEvent("select", {
                 bubbles: true,
                 composed: true,
                 cancelable: true,
@@ -274,9 +295,8 @@ export default class cTree extends LightningElement {
             this.callbackMap[currentFocused.key].unfocusCallback();
         }
         if (item) {
-            this._currentFocusedItem = this.treedata.updateCurrentFocusedItemIndex(
-                item.index
-            );
+            this._currentFocusedItem =
+                this.treedata.updateCurrentFocusedItemIndex(item.index);
 
             if (this.callbackMap[item.parent]) {
                 this.callbackMap[item.parent].focusCallback(
