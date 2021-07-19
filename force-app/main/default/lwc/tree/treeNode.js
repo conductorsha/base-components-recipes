@@ -16,7 +16,6 @@ function computeKey(parentKey, childNum) {
 }
 
 export function getTreeNode(node, level, parentKey, childNum) {
-    console.log("Im creating records!", node);
     return {
         name: node.name,
         label: node.label,

@@ -161,14 +161,12 @@ export default class cTreeItem extends LightningElement {
     }
 
     loadMoreEvent() {
-        console.log("Received event!");
         const customEvent = new CustomEvent("loadmorerecords", {
             bubbles: true,
             composed: true,
             cancelable: true,
             detail: {
-                name: this.nodename,
-                key: this.nodeKey
+                nodename: this.nodename ? this.nodename : null
             }
         });
         this.dispatchEvent(customEvent);

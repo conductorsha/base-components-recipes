@@ -5,42 +5,54 @@ import getHierarchyRecordsCount from "@salesforce/apex/HierarchyController.getHi
 // import { deepCopy } from "../utilsPrivate/utility";
 export default class HierarchyComponent extends LightningElement {
     @track items = [];
-    recordsLimitPerBatch = 5;
+    recordsLimitPerBatch = 1;
     selectedItem = null;
     @track recordIdToNumberOfChildPages = new Map();
+    @track recordIdToCurrentPage = new Map();
     isTreeLoading = false;
+    get rootInfo() {
+        return {
+            maximumChildPages: this.recordIdToNumberOfChildPages.get(null),
+            currentPage: this.recordIdToCurrentPage.get(null)
+        };
+    }
 
     async connectedCallback() {
         this.isTreeLoading = true;
-        this.addPaginationInfo(null);
-        this.getData("Account", null);
-    }
-
-    handleSelect(event) {
-        this.selectedItem = event.detail.name;
+        await this.getInitialData("Account", null);
     }
 
     async handleToggle(event) {
-        this.isTreeLoading = true;
         let { itemName, eventName } = event.detail;
-        this.addPaginationInfo(itemName);
         if (eventName === "expand") {
-            this.getData("Account", itemName);
+            this.isTreeLoading = true; //
+            await this.getInitialData("Account", itemName);
         }
     }
 
     async loadMoreRecords(event) {
-        let { itemName } = event.detail;
-        this.getData("Account", itemName);
+        let nodename = event.detail.nodename;
+        this.recordIdToCurrentPage.set(
+            nodename,
+            this.recordIdToCurrentPage.get(nodename) + 1
+        );
+        await this.getData("Account", nodename);
     }
 
     addChildrenToRow(data, rowName, children) {
         return data.map((row) => {
             if (row.name === rowName) {
+                let items = [...row.items, ...children];
+                if (items[0] === "") {
+                    items.shift();
+                }
                 return {
                     ...row,
-                    items: children,
-                    expanded: true
+                    items: items,
+                    expanded: true,
+                    maximumChildPages:
+                        this.recordIdToNumberOfChildPages.get(rowName), //TO Change!!! this is bad. this field defines how many children do we have at all.
+                    currentPage: this.recordIdToCurrentPage.get(rowName)
                 };
             }
 
@@ -54,33 +66,26 @@ export default class HierarchyComponent extends LightningElement {
         });
     }
 
-    async addPaginationInfo(recordId) {
+    async addPaginationInfo(objectName, recordId) {
         let countOfChildRecords = await getHierarchyRecordsCount({
-            objectName: "Account",
+            objectName: objectName,
             parentId: recordId
         });
         this.recordIdToNumberOfChildPages.set(
             recordId,
-            Math.ceil(countOfChildRecords / this.recordsLimitPerBatch)
+            Math.ceil(countOfChildRecords / this.recordsLimitPerBatch) - 1
         );
-        console.log("Current map: ", this.recordIdToNumberOfChildPages);
+        this.recordIdToCurrentPage.set(recordId, 0);
     }
-
+    async getInitialData(objectName, parentId) {
+        await this.addPaginationInfo(objectName, parentId);
+        this.getData(objectName, parentId);
+    }
     async getData(objectName, parentId) {
-        let retrievedData = await getHierarchyRecords({
-            objectName: objectName,
-            parentId: parentId,
-            recordsPerBatch: this.recordsLimitPerBatch,
-            batchNumber: 0
-        });
-        retrievedData = retrievedData.map((item) => ({
-            name: item.recordId,
-            label: item.recordName,
-            metatext: item.hierarchyLevel,
-            items: [""],
-            maximumChildPages: this.recordIdToNumberOfChildPages.get(parentId),
-            currentPage: 0
-        }));
+        let retrievedData = await this.getFormattedChildData(
+            objectName,
+            parentId
+        );
         if (parentId) {
             this.items = this.addChildrenToRow(
                 this.items,
@@ -88,8 +93,35 @@ export default class HierarchyComponent extends LightningElement {
                 retrievedData
             );
         } else {
-            this.items = retrievedData;
+            this.items =
+                this.items.length === 0
+                    ? retrievedData
+                    : [...this.items, ...retrievedData];
         }
         this.isTreeLoading = false;
+    }
+
+    async getFormattedChildData(objectName, parentId) {
+        let retrievedData = await getHierarchyRecords({
+            objectName: objectName,
+            parentId: parentId,
+            recordsPerBatch: this.recordsLimitPerBatch,
+            batchNumber: this.recordIdToCurrentPage.get(parentId)
+        });
+
+        retrievedData = retrievedData.map((item) => {
+            return {
+                name: item.recordId,
+                label: item.recordName,
+                metatext: item.hierarchyLevel,
+                items: [""],
+                currentPage: 0
+            };
+        });
+        return retrievedData;
+    }
+
+    handleSelect(event) {
+        this.selectedItem = event.detail.name;
     }
 }

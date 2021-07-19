@@ -11,7 +11,7 @@ import { keyCodes, deepCopy } from "c/utilsPrivate";
 
 export default class cTree extends LightningElement {
     @api header;
-
+    @api rootInfo;
     @track _currentFocusedItem = null;
     @track _childNodes;
     @track _key;
@@ -40,11 +40,6 @@ export default class cTree extends LightningElement {
             "privateregisteritem",
             this.handleRegistration.bind(this)
         );
-
-        // this.template.addEventListener(
-        //     "loadmorerecords",
-        //     this.loadMoreRecords.bind(this)
-        // );
     }
 
     @api get items() {
@@ -91,6 +86,8 @@ export default class cTree extends LightningElement {
     }
 
     normalizeData(items) {
+        console.log("Retrieved Data: ");
+        console.log(JSON.parse(JSON.stringify(items)));
         if (items) {
             this.treedata = new TreeData();
 
@@ -99,6 +96,7 @@ export default class cTree extends LightningElement {
             });
 
             const treeRoot = this.treedata.parse(this.items, this.selectedItem);
+            console.log("My Root: ", treeRoot);
             this._childNodes = treeRoot ? treeRoot.children : [];
             this._selectedItem = treeRoot.selectedItem;
             this._key = this._childNodes.length > 0 ? treeRoot.key : null;
@@ -182,18 +180,6 @@ export default class cTree extends LightningElement {
             }
         }
     }
-    // loadMoreRecords(event) {
-    //     const key = event.detail.key;
-    //     const item = this.treedata.getItem(key);
-
-    //     this.dispatchEvent(
-    //         new CustomEvent("loadmorerecords", {
-    //             detail: {
-    //                 itemName: item.treeNode.name
-    //             }
-    //         })
-    //     );
-    // }
     expandBranch(node) {
         if (!node.isLeaf && !node.isDisabled) {
             node.nodeRef.expanded = true;
@@ -210,8 +196,8 @@ export default class cTree extends LightningElement {
             this.dispatchEvent(
                 new CustomEvent("expandcollapse", {
                     detail: {
-                        items: deepCopy(this._items),
                         itemName: node.name,
+                        item: node,
                         eventName: "expand"
                     }
                 })
@@ -227,7 +213,7 @@ export default class cTree extends LightningElement {
             this.dispatchEvent(
                 new CustomEvent("expandcollapse", {
                     detail: {
-                        items: deepCopy(this._items),
+                        item: node,
                         itemName: node.name,
                         eventName: "collapse"
                     }
