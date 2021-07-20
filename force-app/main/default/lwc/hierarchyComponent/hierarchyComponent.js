@@ -5,7 +5,7 @@ import getHierarchyRecordsCount from "@salesforce/apex/HierarchyController.getHi
 // import { deepCopy } from "../utilsPrivate/utility";
 export default class HierarchyComponent extends LightningElement {
     @track items = [];
-    recordsLimitPerBatch = 1;
+    recordsLimitPerBatch = 2;
     selectedItem = null;
     @track recordIdToNumberOfChildPages = new Map();
     @track recordIdToCurrentPage = new Map();
@@ -44,10 +44,14 @@ export default class HierarchyComponent extends LightningElement {
     addChildrenToRow(data, rowName, children) {
         return data.map((row) => {
             if (row.name === rowName) {
+                // console.log("Adding children to: " + row.label);
+                // console.log("new children: ", children);
                 let items = [...row.items, ...children];
                 if (items[0] === "") {
                     items.shift();
                 }
+                // console.log("Original items: ", row.items);
+                // console.log("new items: ", items);
                 return {
                     ...row,
                     items: items,
