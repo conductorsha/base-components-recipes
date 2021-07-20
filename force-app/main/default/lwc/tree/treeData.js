@@ -70,7 +70,6 @@ export class TreeData {
                 return this.cloneItems(leaf);
             });
         }
-
         return newItem;
     }
 

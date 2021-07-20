@@ -23,10 +23,12 @@ export default class HierarchyComponent extends LightningElement {
     }
 
     async handleToggle(event) {
-        let { itemName, eventName } = event.detail;
+        let { item, itemName, eventName } = event.detail;
         if (eventName === "expand") {
-            this.isTreeLoading = true; //
-            await this.getInitialData("Account", itemName);
+            if (item.children.length === 0) {
+                this.isTreeLoading = true; //
+                await this.getInitialData("Account", itemName);
+            }
         }
     }
 

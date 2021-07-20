@@ -118,7 +118,6 @@ export default class cTreeItem extends LightningElement {
     }
 
     get children() {
-        console.log(JSON.parse(JSON.stringify(this._children)));
         return this._children.map((child, idx) => {
             return {
                 node: child,

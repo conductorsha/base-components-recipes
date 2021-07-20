@@ -86,11 +86,8 @@ export default class cTree extends LightningElement {
     }
 
     normalizeData(items) {
-        console.log("Retrieved Data: ");
-        console.log(JSON.parse(JSON.stringify(items)));
         if (items) {
             this.treedata = new TreeData();
-
             this._items = items.map((item) => {
                 return this.treedata.cloneItems(item);
             });
