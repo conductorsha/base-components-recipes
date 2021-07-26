@@ -5,6 +5,7 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
 
+/*calculates node key e.g. 1, 1.1, 0, 2.1 */
 function computeKey(parentKey, childNum) {
     if (!parentKey) {
         return "0";
@@ -42,6 +43,7 @@ export function getTreeNode(node, level, parentKey, childNum) {
             ).toString();
         },
         maximumChildPages: node.maximumChildPages,
-        currentPage: node.currentPage
+        currentPage: node.currentPage,
+        isCheckedForFilter: node.isCheckedForFilter
     };
 }

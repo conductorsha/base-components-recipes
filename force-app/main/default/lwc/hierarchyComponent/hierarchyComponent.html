@@ -5,16 +5,17 @@
             size="medium"
         ></lightning-spinner>
     </template>
-    <template if:false={isTreeLoading}>
-        <c-tree
-            items={items}
-            header="Records"
-            selected-item={selectedItem}
-            onselect={handleSelect}
-            onexpandcollapse={handleToggle}
-            root-info={rootInfo}
-            onloadmorerecords={loadMoreRecords}
-        >
-        </c-tree>
-    </template>
+    <!-- <template if:false={isTreeLoading}> -->
+    <c-tree
+        items={items}
+        header="Records"
+        focused-item={focusedItem}
+        onfocus={handleFocusItem}
+        onexpandcollapse={handleToggle}
+        root-info={rootInfo}
+        onloadmorerecords={loadMoreRecords}
+        oncontrolhierarchyfilterelements={handleSelectionForHierarchyFilter}
+    >
+    </c-tree>
+    <!-- </template> -->
 </template>

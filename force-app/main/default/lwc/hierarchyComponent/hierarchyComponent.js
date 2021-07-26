@@ -5,10 +5,11 @@ import getHierarchyRecordsCount from "@salesforce/apex/HierarchyController.getHi
 // import { deepCopy } from "../utilsPrivate/utility";
 export default class HierarchyComponent extends LightningElement {
     @track items = [];
-    recordsLimitPerBatch = 2;
-    selectedItem = null;
+    recordsLimitPerBatch = 1;
+    focusedItem = null;
     @track recordIdToNumberOfChildPages = new Map();
     @track recordIdToCurrentPage = new Map();
+    @track selectedItemsForHierarchyFilter = new Map();
     isTreeLoading = false;
     get rootInfo() {
         return {
@@ -33,6 +34,7 @@ export default class HierarchyComponent extends LightningElement {
     }
 
     async loadMoreRecords(event) {
+        this.isTreeLoading = true;
         let nodename = event.detail.nodename;
         this.recordIdToCurrentPage.set(
             nodename,
@@ -44,21 +46,20 @@ export default class HierarchyComponent extends LightningElement {
     addChildrenToRow(data, rowName, children) {
         return data.map((row) => {
             if (row.name === rowName) {
-                // console.log("Adding children to: " + row.label);
-                // console.log("new children: ", children);
                 let items = [...row.items, ...children];
                 if (items[0] === "") {
                     items.shift();
                 }
-                // console.log("Original items: ", row.items);
-                // console.log("new items: ", items);
+
                 return {
                     ...row,
                     items: items,
                     expanded: true,
                     maximumChildPages:
                         this.recordIdToNumberOfChildPages.get(rowName), //TO Change!!! this is bad. this field defines how many children do we have at all.
-                    currentPage: this.recordIdToCurrentPage.get(rowName)
+                    currentPage: this.recordIdToCurrentPage.get(rowName),
+                    isCheckedForFilter:
+                        this.selectedItemsForHierarchyFilter.has(rowName)
                 };
             }
 
@@ -87,15 +88,15 @@ export default class HierarchyComponent extends LightningElement {
         await this.addPaginationInfo(objectName, parentId);
         this.getData(objectName, parentId);
     }
-    async getData(objectName, parentId) {
+    async getData(objectName, recordId) {
         let retrievedData = await this.getFormattedChildData(
             objectName,
-            parentId
+            recordId
         );
-        if (parentId) {
+        if (recordId) {
             this.items = this.addChildrenToRow(
                 this.items,
-                parentId,
+                recordId,
                 retrievedData
             );
         } else {
@@ -121,13 +122,41 @@ export default class HierarchyComponent extends LightningElement {
                 label: item.recordName,
                 metatext: item.hierarchyLevel,
                 items: [""],
-                currentPage: 0
+                currentPage: 0,
+                isCheckedForFilter: false
             };
-        });
+        }); //!!!!!!!!!!!
         return retrievedData;
     }
 
-    handleSelect(event) {
-        this.selectedItem = event.detail.name;
+    handleFocusItem(event) {
+        console.log(
+            "Hierarchy Component. Ive received info about new focusedItem: " +
+                event.detail.name
+        );
+        this.focusedItem = event.detail.name;
     }
+
+    handleSelectionForHierarchyFilter(event) {
+        const { name, label } = event.detail;
+        if (this.selectedItemsForHierarchyFilter.has(name)) {
+            this.selectedItemsForHierarchyFilter.delete(name);
+        } else {
+            this.selectedItemsForHierarchyFilter.set(name, label);
+            // this.flagSelectedRecord(name, this.items);
+        }
+        console.log(this.selectedItemsForHierarchyFilter);
+        console.log(this.items);
+    }
+
+    // flagSelectedRecord(elementName, treeFragment) {
+    //     for (let treeElement of treeFragment) {
+    //         if (treeElement.name === elementName) {
+    //             treeElement.isCheckedForFilter = true;
+    //         }
+    //         if (treeElement.items && treeElement.items.length > 0) {
+    //             this.flagSelectedRecord(elementName, treeElement.items);
+    //         }
+    //     }
+    // }
 }

@@ -19,11 +19,11 @@ const i18n = {
 export default class cTreeItem extends LightningElement {
     @track _children = [];
     @track _tabindexes = {};
-    @track _selected = {};
+    @track _focused = {};
     @api maximumChildPages;
     @api currentPage;
+    @api isCheckedForFilter;
     _focusedChild = null;
-
     @api isRoot = false;
     @api label;
     @api href;
@@ -34,17 +34,17 @@ export default class cTreeItem extends LightningElement {
     @api nodename;
     @api nodeKey;
     @api isLeaf;
-    @api selected;
-
+    @api focused;
     @api get childItems() {
         return this._children;
     }
 
     set childItems(value) {
+        //defines children data and sets _focused object to false for every child.
         this._children = value;
         const childLen = this._children.length;
         for (let i = 0; i < childLen; i++) {
-            this.setSelectedAttribute(i, "false");
+            this.setFocusedAttribute(i, "false");
         }
     }
 
@@ -60,8 +60,8 @@ export default class cTreeItem extends LightningElement {
         this._focusedChild = value;
     }
 
-    setSelectedAttribute(childNum, value) {
-        this._selected[childNum] = value;
+    setFocusedAttribute(childNum, value) {
+        this._focused[childNum] = value;
     }
 
     connectedCallback() {
@@ -122,7 +122,7 @@ export default class cTreeItem extends LightningElement {
             return {
                 node: child,
                 tabindex: this._tabindexes[idx],
-                selected: this._selected[idx]
+                focused: this._focused[idx]
             };
         });
     }
@@ -134,6 +134,7 @@ export default class cTreeItem extends LightningElement {
 
     handleClick(event) {
         if (!this.isDisabled) {
+            console.log(event.target);
             // eslint-disable-next-line no-script-url
             if (this.href === "javascript:void(0)") {
                 event.preventDefault();
@@ -144,7 +145,13 @@ export default class cTreeItem extends LightningElement {
                 event.target.tagName === "C-PRIMITIVE-ICON"
             ) {
                 target = "chevron";
+            } else if (event.target.tagName === "LIGHTNING-INPUT") {
+                target = "filterSelectionCheckbox";
             }
+            console.log(
+                "TreeItem. Somebody Clicked me! My target is: ",
+                event.target
+            );
             const customEvent = new CustomEvent("privateitemclick", {
                 bubbles: true,
                 composed: true,

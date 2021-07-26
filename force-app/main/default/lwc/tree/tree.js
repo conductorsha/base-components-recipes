@@ -18,8 +18,9 @@ export default class cTree extends LightningElement {
     @track _focusedChild = null;
     @track _items = [];
     _defaultFocused = { key: "1", parent: "0" };
-    _selected = null;
-    @track _selectedItem = null;
+    _focused = null;
+    @track _focusedItem = null;
+    @track
     hasDetachedListeners = true;
 
     constructor() {
@@ -50,13 +51,15 @@ export default class cTree extends LightningElement {
         this.normalizeData(value);
     }
 
-    @api get selectedItem() {
-        return this._selected;
+    @api get focusedItem() {
+        return this._focused;
     }
 
-    set selectedItem(value) {
-        this._selected = value;
-        this.syncSelected();
+    set focusedItem(value) {
+        console.log("Tree. Setting focused item from hierarchy component.");
+        console.log("Tree. New _focused is: ", value);
+        this._focused = value;
+        this.syncFocused();
     }
 
     get children() {
@@ -71,15 +74,16 @@ export default class cTree extends LightningElement {
         return this._focusedChild;
     }
 
-    syncSelected() {
+    //if the treedata exists and _childNodes already populated we can synchronize focusedItem.
+    syncFocused() {
+        //the parameters passing works asynchronously. we should be careful with how we set up the paramenters.
+        console.log("Tree. Syncing focused because of hierarchyComponent");
         if (this.treedata && this._childNodes.length > 0) {
-            this._selectedItem = this.treedata.syncSelectedToData(
-                this.selectedItem
+            this._focusedItem = this.treedata.syncFocusedToData(
+                this.focusedItem
             );
-
             this.syncCurrentFocused();
-
-            if (this._selectedItem === null) {
+            if (this._focusedItem === null) {
                 this.setFocusToItem(this._currentFocusedItem, false, false);
             }
         }
@@ -87,33 +91,38 @@ export default class cTree extends LightningElement {
 
     normalizeData(items) {
         if (items) {
-            this.treedata = new TreeData();
+            this.treedata = new TreeData(); //START. create initial tree and initialize elements there
             this._items = items.map((item) => {
                 return this.treedata.cloneItems(item);
-            });
+            }); //create copy of the items
 
-            const treeRoot = this.treedata.parse(this.items, this.selectedItem);
-            console.log("My Root: ", treeRoot);
-            this._childNodes = treeRoot ? treeRoot.children : [];
-            this._selectedItem = treeRoot.selectedItem;
-            this._key = this._childNodes.length > 0 ? treeRoot.key : null;
+            const treeRoot = this.treedata.parse(this.items, this.focusedItem); //creates the real tree with copy of the initial nodes but with marked keys, info about leafs and other staff
+            console.log("My final built tree: ", treeRoot);
+            this._childNodes = treeRoot ? treeRoot.children : []; // receive the childNodes in form of the tree item
+            console.log("My childNOdes: " + this._childNodes);
+            this._focusedItem = treeRoot.focusedItem; //returns info about focused node in special format: key, parent, name and reference to real node object
+            this._key = this._childNodes.length > 0 ? treeRoot.key : null; // for tree it should be 0
+            console.log("My current key is: ", this._key);
             if (this._key) {
-                this.syncCurrentFocused();
+                this.syncCurrentFocused(); // update the current focused item
             }
         }
     }
 
     syncCurrentFocused() {
-        if (this._selectedItem) {
-            this._currentFocusedItem = this._selectedItem;
+        if (this._focusedItem) {
+            this._currentFocusedItem = this._focusedItem;
         } else {
             this._currentFocusedItem = this._defaultFocused;
         }
-
         this.updateCurrentFocusedChild();
     }
 
     updateCurrentFocusedChild() {
+        //updating currentfocusedchild. IDK  what it does :/ TODO!!
+        console.log("Tree. updatingCurerntFocusedChild");
+        console.log(this._key);
+        console.log(this._currentFocusedItem);
         if (this._key === this._currentFocusedItem.parent) {
             this._focusedChild = this.treedata.getChildNum(
                 this._currentFocusedItem.key
@@ -124,6 +133,7 @@ export default class cTree extends LightningElement {
                 this._currentFocusedItem.key
             );
         }
+        console.log(this._focusedChild);
     }
 
     handleTreeFocusIn(event) {
@@ -138,7 +148,7 @@ export default class cTree extends LightningElement {
     }
 
     renderedCallback() {
-        if (this._selectedItem) {
+        if (this._focusedItem) {
             this.setFocusToItem(this._currentFocusedItem, false);
         }
         if (this.hasDetachedListeners) {
@@ -160,6 +170,7 @@ export default class cTree extends LightningElement {
     }
 
     handleClick(event) {
+        console.log("Tree. Im deciding where to go afte click");
         const key = event.detail.key;
         const target = event.detail.target;
         const item = this.treedata.getItem(key);
@@ -170,10 +181,14 @@ export default class cTree extends LightningElement {
                 } else {
                     this.expandBranch(item.treeNode);
                 }
+            } else if (target === "filterSelectionCheckbox") {
+                this.dispatchSelectedForFilterEvent(item.treeNode);
             } else {
-                this._selectedItem = item;
-                this.dispatchSelectEvent(item.treeNode);
-                this.setFocusToItem(item);
+                this._focusedItem = item;
+                console.log("Tree. New Item: ", this._focusedItem);
+                this.dispatchFocusEvent(item.treeNode);
+                // this.setFocusToItem(item);
+                // console.log("Tree. handleClick finish.");
             }
         }
     }
@@ -181,12 +196,12 @@ export default class cTree extends LightningElement {
         if (!node.isLeaf && !node.isDisabled) {
             node.nodeRef.expanded = true;
             if (
-                this._selectedItem &&
-                this._selectedItem.key.startsWith(node.key)
+                this._focusedItem &&
+                this._focusedItem.key.startsWith(node.key)
             ) {
                 // eslint-disable-next-line @lwc/lwc/no-async-operation
                 setTimeout(() => {
-                    this.setFocusToItem(this._selectedItem);
+                    this.setFocusToItem(this._focusedItem);
                 }, 0);
             }
 
@@ -219,9 +234,13 @@ export default class cTree extends LightningElement {
         }
     }
 
-    dispatchSelectEvent(node) {
+    dispatchFocusEvent(node) {
         if (!node.isDisabled) {
-            const customEvent = new CustomEvent("select", {
+            console.log(
+                "Tree. Im sending event about new focused item: ",
+                node
+            );
+            const customEvent = new CustomEvent("focus", {
                 bubbles: true,
                 composed: true,
                 cancelable: true,
@@ -231,7 +250,26 @@ export default class cTree extends LightningElement {
             this.dispatchEvent(customEvent);
         }
     }
+    dispatchSelectedForFilterEvent(node) {
+        if (!node.isDisabled) {
+            // node.nodeRef.isCheckedForFilter = !node.nodeRef.isCheckedForFilter;
 
+            const customEvent = new CustomEvent(
+                "controlhierarchyfilterelements",
+                {
+                    bubbles: true,
+                    composed: true,
+                    cancelable: true,
+                    detail: {
+                        name: node.name,
+                        label: node.label
+                    }
+                }
+            );
+
+            this.dispatchEvent(customEvent);
+        }
+    }
     handleKeydown(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -266,21 +304,28 @@ export default class cTree extends LightningElement {
     }
 
     setFocusToItem(item, shouldFocus = true, shouldSelect = true) {
+        console.log("Tree. Im setting focus to new Item: ", item);
         const currentFocused = this.treedata.getItemAtIndex(
             this.treedata.currentFocusedItemIndex
         );
-
+        console.log(
+            "Tree. Checkign if theyre not the same. New: ",
+            item,
+            ". Old: ",
+            currentFocused
+        );
         if (
             currentFocused &&
             currentFocused.key !== item.key &&
             this.callbackMap[currentFocused.parent]
         ) {
+            console.log("Tree. Theyre different. Unfocussing old.");
             this.callbackMap[currentFocused.key].unfocusCallback();
         }
         if (item) {
+            console.log("Tree. Theyre different. Updating to new item.");
             this._currentFocusedItem =
                 this.treedata.updateCurrentFocusedItemIndex(item.index);
-
             if (this.callbackMap[item.parent]) {
                 this.callbackMap[item.parent].focusCallback(
                     item.key,

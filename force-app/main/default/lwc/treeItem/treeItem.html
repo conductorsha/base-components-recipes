@@ -14,7 +14,7 @@
                     data-key={item.node.key}
                     key={item.node.key}
                     node-key={item.node.key}
-                    aria-selected={item.selected}
+                    aria-selected={item.focused}
                     aria-level={item.node.level}
                     aria-disabled={item.node.isDisabled}
                     label={item.node.label}
@@ -38,7 +38,7 @@
                     data-key={item.node.key}
                     key={item.node.key}
                     node-key={item.node.key}
-                    aria-selected={item.selected}
+                    aria-selected={item.focused}
                     aria-level={item.node.level}
                     label={item.node.label}
                     href={item.node.href}
@@ -60,7 +60,7 @@
             </template>
         </template>
         <template if:true={isToShowPagination}>
-            <button onclick={loadMoreEvent}>paginationButton</button>
+            <button onclick={loadMoreEvent}>Load More Records</button>
         </template>
     </template>
     <template if:false={isRoot}>
@@ -116,6 +116,12 @@
                     </a>
                 </template>
             </span>
+            <lightning-input
+                type="checkbox-button"
+                label="Include to Filter?"
+                name="includeToFilter"
+                checked={isCheckedForFilter}
+            ></lightning-input>
         </div>
         <template if:true={showExpanded}>
             <div role="group">
@@ -126,7 +132,7 @@
                             data-key={item.node.key}
                             key={item.node.key}
                             node-key={item.node.key}
-                            aria-selected={item.selected}
+                            aria-selected={item.focused}
                             aria-level={item.node.level}
                             aria-disabled={item.node.isDisabled}
                             label={item.node.label}
@@ -141,6 +147,7 @@
                             child-items={item.node.children}
                             maximum-child-pages={item.node.maximumChildPages}
                             current-page={item.node.currentPage}
+                            is-checked-for-filter={item.node.isCheckedForFilter}
                         >
                         </c-tree-item>
                     </template>
@@ -150,7 +157,7 @@
                             data-key={item.node.key}
                             key={item.node.key}
                             node-key={item.node.key}
-                            aria-selected={item.selected}
+                            aria-selected={item.focused}
                             aria-level={item.node.level}
                             aria-disabled={item.node.isDisabled}
                             label={item.node.label}
@@ -167,12 +174,18 @@
                             aria-expanded={item.node.strexpanded}
                             maximum-child-pages={item.node.maximumChildPages}
                             current-page={item.node.currentPage}
+                            is-checked-for-filter={item.node.isCheckedForFilter}
                         >
                         </c-tree-item>
                     </template>
                 </template>
                 <template if:true={isToShowPagination}>
-                    <button onclick={loadMoreEvent}>paginationButton</button>
+                    <div class="slds-tree__item">
+                        &emsp;&emsp;
+                        <button onclick={loadMoreEvent}>
+                            Load More Records
+                        </button>
+                    </div>
                 </template>
             </div>
         </template>

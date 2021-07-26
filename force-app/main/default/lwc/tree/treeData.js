@@ -37,7 +37,8 @@ export class TreeData {
         return this._nameKeyMapping;
     }
 
-    syncSelectedToData(itemName) {
+    syncFocusedToData(itemName) {
+        //actually, all this method does is updates all the parent records to expanded and returns the focused item
         if (itemName) {
             const item = this.getItemFromName(itemName);
             if (item) {
@@ -48,10 +49,11 @@ export class TreeData {
         return null;
     }
 
-    syncDataToSelected(node) {
+    syncDataToFocused(node) {
         this.updateExpanded(node.key);
     }
 
+    /* deep clone creation */
     cloneItems(item) {
         const newItem = {
             label: item.label,
@@ -62,7 +64,8 @@ export class TreeData {
             disabled: item.disabled,
             items: [],
             maximumChildPages: item.maximumChildPages,
-            currentPage: item.currentPage
+            currentPage: item.currentPage,
+            isCheckedForFilter: item.isCheckedForFilter
         };
 
         if (item.items && item.items.length > 0) {
@@ -73,19 +76,26 @@ export class TreeData {
         return newItem;
     }
 
-    parse(data, selected) {
-        const root = {};
-        root.items = data;
+    parse(data, focused) {
+        // console.log("Building tree for: ", data);
+        // console.log("focused item is: ", focused);
+        //this method builds a real tree with focused items and has the list of visible items
+        const root = {}; //set empty object as a root
+        root.items = data; // initial data will be its child
         const seen = new WeakSet();
-        let _selectedItem = null;
+        let _focusedItem = null;
         function buildTree(currentNode, parent, level, childNum) {
+            console.log("Building tree for: ", currentNode);
+            console.log("Parent node is: ", parent);
+            console.log("Level: ", level);
+            console.log("ChildNum: ", childNum);
             if (isNodeValid(currentNode, level)) {
                 const node = getTreeNode(
                     currentNode,
                     level,
                     parent ? parent.key : null,
                     childNum + 1
-                );
+                ); //this method transforms normal node to the treeNode(copies info and adds info about expanded and if its a leaf, assignes key to it)
 
                 if (
                     parent &&
@@ -99,6 +109,7 @@ export class TreeData {
                 seen.add(currentNode);
 
                 if (node.key && parent) {
+                    // if method has parent then
                     this.treeItemsInTraversalOrder.push(node.key);
                     const indexedObj = {
                         index: this.treeItemsInTraversalOrder.length - 1,
@@ -110,14 +121,10 @@ export class TreeData {
 
                     this.indices[node.key] = indexedObj;
                     this.nameKeyMapping[node.name] = node.key;
-                    if (node.name === selected) {
-                        this.syncDataToSelected(
-                            node,
-                            indexedObj.index,
-                            selected
-                        );
+                    if (node.name === focused) {
+                        this.syncDataToFocused(node, indexedObj.index, focused);
 
-                        _selectedItem = indexedObj;
+                        _focusedItem = indexedObj;
                     }
                 }
 
@@ -174,13 +181,15 @@ export class TreeData {
             tree.visibleItems.forEach((item) => {
                 this._visibleTreeItems.add(item);
             });
-            tree.selectedItem = _selectedItem;
+            tree.focusedItem = _focusedItem;
+            console.log("Built tree: ", tree);
             return tree;
         }
         return null;
     }
 
     updateExpanded(key) {
+        //this sets all the parentnodes of focused items to expanded state
         const node = this._indices[key];
         if (node) {
             let parentKey = node.parent;
@@ -307,6 +316,14 @@ export class TreeData {
     updateCurrentFocusedItemIndex(focused) {
         if (focused > -1 && focused < this.treeItemsInTraversalOrder.length) {
             this._currentFocusedItemIndex = focused;
+            console.log(
+                "TreeData. My new currenFocusedItemIndex: ",
+                this._currentFocusedItemIndex
+            );
+            console.log(
+                "TreeData. Returning new items index: ",
+                this.getItemAtIndex(this.currentFocusedItemIndex)
+            );
             return this.getItemAtIndex(this.currentFocusedItemIndex);
         }
         this._currentFocusedItemIndex = 0;
