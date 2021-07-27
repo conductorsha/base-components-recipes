@@ -22,13 +22,13 @@ export default class cTreeItem extends LightningElement {
     @track _focused = {};
     @api maximumChildPages;
     @api currentPage;
-    @api isCheckedForFilter;
+    _isCheckedForFilter;
     _focusedChild = null;
     @api isRoot = false;
     @api label;
     @api href;
     @api metatext;
-    @api nodeRef;
+    _nodeRef;
     @api isExpanded;
     @api isDisabled = false;
     @api nodename;
@@ -37,6 +37,14 @@ export default class cTreeItem extends LightningElement {
     @api focused;
     @api get childItems() {
         return this._children;
+    }
+
+    @api get nodeRef() {
+        return this._nodeRef;
+    }
+
+    set nodeRef(value) {
+        this._nodeRef = value;
     }
 
     set childItems(value) {
@@ -50,6 +58,14 @@ export default class cTreeItem extends LightningElement {
 
     @api get focusedChild() {
         return this._focusedChild;
+    }
+
+    @api get isCheckedForFilter() {
+        return this._isCheckedForFilter;
+    }
+
+    set isCheckedForFilter(value) {
+        this._isCheckedForFilter = value;
     }
 
     get isToShowPagination() {
@@ -134,7 +150,6 @@ export default class cTreeItem extends LightningElement {
 
     handleClick(event) {
         if (!this.isDisabled) {
-            console.log(event.target);
             // eslint-disable-next-line no-script-url
             if (this.href === "javascript:void(0)") {
                 event.preventDefault();
@@ -147,11 +162,8 @@ export default class cTreeItem extends LightningElement {
                 target = "chevron";
             } else if (event.target.tagName === "LIGHTNING-INPUT") {
                 target = "filterSelectionCheckbox";
+                this._isCheckedForFilter = !this._isCheckedForFilter;
             }
-            console.log(
-                "TreeItem. Somebody Clicked me! My target is: ",
-                event.target
-            );
             const customEvent = new CustomEvent("privateitemclick", {
                 bubbles: true,
                 composed: true,
@@ -221,7 +233,6 @@ export default class cTreeItem extends LightningElement {
         if (item !== undefined) {
             eventObject.detail = { key: item };
         }
-        // eslint-disable-next-line lightning-global/no-custom-event-identifier-arguments
         this.dispatchEvent(new CustomEvent(eventName, eventObject));
     }
 

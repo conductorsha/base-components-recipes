@@ -9,12 +9,12 @@
     <c-tree
         items={items}
         header="Records"
-        focused-item={focusedItem}
+        focused-item-name={focusedItemName}
         onfocus={handleFocusItem}
         onexpandcollapse={handleToggle}
         root-info={rootInfo}
         onloadmorerecords={loadMoreRecords}
-        oncontrolhierarchyfilterelements={handleSelectionForHierarchyFilter}
+        onselecteditem={handleSectedItem}
     >
     </c-tree>
     <!-- </template> -->

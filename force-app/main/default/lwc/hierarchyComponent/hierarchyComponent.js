@@ -6,10 +6,10 @@ import getHierarchyRecordsCount from "@salesforce/apex/HierarchyController.getHi
 export default class HierarchyComponent extends LightningElement {
     @track items = [];
     recordsLimitPerBatch = 1;
-    focusedItem = null;
+    focusedItemName = null;
     @track recordIdToNumberOfChildPages = new Map();
     @track recordIdToCurrentPage = new Map();
-    @track selectedItemsForHierarchyFilter = new Map();
+    @track selectedItems = new Map();
     isTreeLoading = false;
     get rootInfo() {
         return {
@@ -46,20 +46,19 @@ export default class HierarchyComponent extends LightningElement {
     addChildrenToRow(data, rowName, children) {
         return data.map((row) => {
             if (row.name === rowName) {
-                let items = [...row.items, ...children];
-                if (items[0] === "") {
-                    items.shift();
+                if (row.items && row.items.length > 0 && row.items[0] === "") {
+                    row.items.shift();
                 }
+                let existingChild = row.items.map((item) => ({
+                    ...item,
+                    isCheckedForFilter: this.selectedItems.has(item.name)
+                }));
+                let items = [...existingChild, ...children];
 
                 return {
                     ...row,
                     items: items,
-                    expanded: true,
-                    maximumChildPages:
-                        this.recordIdToNumberOfChildPages.get(rowName), //TO Change!!! this is bad. this field defines how many children do we have at all.
-                    currentPage: this.recordIdToCurrentPage.get(rowName),
-                    isCheckedForFilter:
-                        this.selectedItemsForHierarchyFilter.has(rowName)
+                    expanded: true
                 };
             }
 
@@ -88,26 +87,29 @@ export default class HierarchyComponent extends LightningElement {
         await this.addPaginationInfo(objectName, parentId);
         this.getData(objectName, parentId);
     }
+
     async getData(objectName, recordId) {
         let retrievedData = await this.getFormattedChildData(
             objectName,
             recordId
         );
+
+        let newItems;
         if (recordId) {
-            this.items = this.addChildrenToRow(
+            newItems = this.addChildrenToRow(
                 this.items,
                 recordId,
                 retrievedData
             );
         } else {
-            this.items =
+            newItems =
                 this.items.length === 0
                     ? retrievedData
                     : [...this.items, ...retrievedData];
         }
+        this.items = this.getFreshItems(newItems);
         this.isTreeLoading = false;
     }
-
     async getFormattedChildData(objectName, parentId) {
         let retrievedData = await getHierarchyRecords({
             objectName: objectName,
@@ -125,38 +127,37 @@ export default class HierarchyComponent extends LightningElement {
                 currentPage: 0,
                 isCheckedForFilter: false
             };
-        }); //!!!!!!!!!!!
+        });
         return retrievedData;
     }
 
+    getFreshItems(finalItems) {
+        return finalItems.map((item) => {
+            return {
+                ...item,
+                maximumChildPages: this.recordIdToNumberOfChildPages.get(
+                    item.name
+                ),
+                currentPage: this.recordIdToCurrentPage.get(item.name),
+                isCheckedForFilter: this.selectedItems.has(item.name),
+                items:
+                    item.items && item.items[0] !== ""
+                        ? this.getFreshItems(item.items)
+                        : item.items
+            };
+        });
+    }
+
     handleFocusItem(event) {
-        console.log(
-            "Hierarchy Component. Ive received info about new focusedItem: " +
-                event.detail.name
-        );
-        this.focusedItem = event.detail.name;
+        this.focusedItemName = event.detail.name;
     }
 
-    handleSelectionForHierarchyFilter(event) {
+    handleSectedItem(event) {
         const { name, label } = event.detail;
-        if (this.selectedItemsForHierarchyFilter.has(name)) {
-            this.selectedItemsForHierarchyFilter.delete(name);
+        if (this.selectedItems.has(name)) {
+            this.selectedItems.delete(name);
         } else {
-            this.selectedItemsForHierarchyFilter.set(name, label);
-            // this.flagSelectedRecord(name, this.items);
+            this.selectedItems.set(name, label);
         }
-        console.log(this.selectedItemsForHierarchyFilter);
-        console.log(this.items);
     }
-
-    // flagSelectedRecord(elementName, treeFragment) {
-    //     for (let treeElement of treeFragment) {
-    //         if (treeElement.name === elementName) {
-    //             treeElement.isCheckedForFilter = true;
-    //         }
-    //         if (treeElement.items && treeElement.items.length > 0) {
-    //             this.flagSelectedRecord(elementName, treeElement.items);
-    //         }
-    //     }
-    // }
 }

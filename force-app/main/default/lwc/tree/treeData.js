@@ -77,18 +77,12 @@ export class TreeData {
     }
 
     parse(data, focused) {
-        // console.log("Building tree for: ", data);
-        // console.log("focused item is: ", focused);
         //this method builds a real tree with focused items and has the list of visible items
         const root = {}; //set empty object as a root
         root.items = data; // initial data will be its child
         const seen = new WeakSet();
         let _focusedItem = null;
         function buildTree(currentNode, parent, level, childNum) {
-            console.log("Building tree for: ", currentNode);
-            console.log("Parent node is: ", parent);
-            console.log("Level: ", level);
-            console.log("ChildNum: ", childNum);
             if (isNodeValid(currentNode, level)) {
                 const node = getTreeNode(
                     currentNode,
@@ -182,7 +176,6 @@ export class TreeData {
                 this._visibleTreeItems.add(item);
             });
             tree.focusedItem = _focusedItem;
-            console.log("Built tree: ", tree);
             return tree;
         }
         return null;
@@ -316,14 +309,6 @@ export class TreeData {
     updateCurrentFocusedItemIndex(focused) {
         if (focused > -1 && focused < this.treeItemsInTraversalOrder.length) {
             this._currentFocusedItemIndex = focused;
-            console.log(
-                "TreeData. My new currenFocusedItemIndex: ",
-                this._currentFocusedItemIndex
-            );
-            console.log(
-                "TreeData. Returning new items index: ",
-                this.getItemAtIndex(this.currentFocusedItemIndex)
-            );
             return this.getItemAtIndex(this.currentFocusedItemIndex);
         }
         this._currentFocusedItemIndex = 0;

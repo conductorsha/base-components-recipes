@@ -147,7 +147,7 @@
                             child-items={item.node.children}
                             maximum-child-pages={item.node.maximumChildPages}
                             current-page={item.node.currentPage}
-                            is-checked-for-filter={item.node.isCheckedForFilter}
+                            is-checked-for-filter={item.node.nodeRef.isCheckedForFilter}
                         >
                         </c-tree-item>
                     </template>
@@ -174,7 +174,7 @@
                             aria-expanded={item.node.strexpanded}
                             maximum-child-pages={item.node.maximumChildPages}
                             current-page={item.node.currentPage}
-                            is-checked-for-filter={item.node.isCheckedForFilter}
+                            is-checked-for-filter={item.node.nodeRef.isCheckedForFilter}
                         >
                         </c-tree-item>
                     </template>
