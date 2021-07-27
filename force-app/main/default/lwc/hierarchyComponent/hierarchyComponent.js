@@ -32,6 +32,22 @@ export default class HierarchyComponent extends LightningElement {
             }
         }
     }
+    async getInitialData(objectName, parentId) {
+        await this.addPaginationInfo(objectName, parentId);
+        this.getData(objectName, parentId);
+    }
+
+    async addPaginationInfo(objectName, recordId) {
+        let countOfChildRecords = await getHierarchyRecordsCount({
+            objectName: objectName,
+            parentId: recordId
+        });
+        this.recordIdToNumberOfChildPages.set(
+            recordId,
+            Math.ceil(countOfChildRecords / this.recordsLimitPerBatch) - 1
+        );
+        this.recordIdToCurrentPage.set(recordId, 0);
+    }
 
     async loadMoreRecords(event) {
         this.isTreeLoading = true;
@@ -41,6 +57,46 @@ export default class HierarchyComponent extends LightningElement {
             this.recordIdToCurrentPage.get(nodename) + 1
         );
         await this.getData("Account", nodename);
+    }
+
+    async getData(objectName, recordId) {
+        let retrievedData = await this.getFormattedChildData(
+            objectName,
+            recordId
+        );
+        let newItems;
+        if (recordId) {
+            newItems = this.addChildrenToRow(
+                this.items,
+                recordId,
+                retrievedData
+            );
+        } else {
+            newItems = [...this.items, ...retrievedData];
+        }
+        this.items = this.getFreshItems(newItems);
+        this.isTreeLoading = false;
+    }
+
+    async getFormattedChildData(objectName, parentId) {
+        let retrievedData = await getHierarchyRecords({
+            objectName: objectName,
+            parentId: parentId,
+            recordsPerBatch: this.recordsLimitPerBatch,
+            batchNumber: this.recordIdToCurrentPage.get(parentId)
+        });
+
+        retrievedData = retrievedData.map((item) => {
+            return {
+                name: item.recordId,
+                label: item.recordName,
+                metatext: item.hierarchyLevel,
+                items: [""],
+                currentPage: 0,
+                isCheckedForFilter: false
+            };
+        });
+        return retrievedData;
     }
 
     addChildrenToRow(data, rowName, children) {
@@ -65,70 +121,11 @@ export default class HierarchyComponent extends LightningElement {
             return {
                 ...row,
                 items:
-                    row.items &&
-                    row.items.length > 0 &&
-                    this.addChildrenToRow(row.items, rowName, children)
+                    row.items && row.items[0] !== ""
+                        ? this.addChildrenToRow(row.items, rowName, children)
+                        : row.items
             };
         });
-    }
-
-    async addPaginationInfo(objectName, recordId) {
-        let countOfChildRecords = await getHierarchyRecordsCount({
-            objectName: objectName,
-            parentId: recordId
-        });
-        this.recordIdToNumberOfChildPages.set(
-            recordId,
-            Math.ceil(countOfChildRecords / this.recordsLimitPerBatch) - 1
-        );
-        this.recordIdToCurrentPage.set(recordId, 0);
-    }
-    async getInitialData(objectName, parentId) {
-        await this.addPaginationInfo(objectName, parentId);
-        this.getData(objectName, parentId);
-    }
-
-    async getData(objectName, recordId) {
-        let retrievedData = await this.getFormattedChildData(
-            objectName,
-            recordId
-        );
-
-        let newItems;
-        if (recordId) {
-            newItems = this.addChildrenToRow(
-                this.items,
-                recordId,
-                retrievedData
-            );
-        } else {
-            newItems =
-                this.items.length === 0
-                    ? retrievedData
-                    : [...this.items, ...retrievedData];
-        }
-        this.items = this.getFreshItems(newItems);
-        this.isTreeLoading = false;
-    }
-    async getFormattedChildData(objectName, parentId) {
-        let retrievedData = await getHierarchyRecords({
-            objectName: objectName,
-            parentId: parentId,
-            recordsPerBatch: this.recordsLimitPerBatch,
-            batchNumber: this.recordIdToCurrentPage.get(parentId)
-        });
-
-        retrievedData = retrievedData.map((item) => {
-            return {
-                name: item.recordId,
-                label: item.recordName,
-                metatext: item.hierarchyLevel,
-                items: [""],
-                currentPage: 0,
-                isCheckedForFilter: false
-            };
-        });
-        return retrievedData;
     }
 
     getFreshItems(finalItems) {
