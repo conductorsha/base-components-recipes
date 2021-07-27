@@ -10,7 +10,9 @@ export default class HierarchyComponent extends LightningElement {
     @track recordIdToNumberOfChildPages = new Map();
     @track recordIdToCurrentPage = new Map();
     @track selectedItems = new Map();
+    @track selectedItemsArray = [];
     isTreeLoading = false;
+    anyItemSelected = false;
     get rootInfo() {
         return {
             maximumChildPages: this.recordIdToNumberOfChildPages.get(null),
@@ -156,5 +158,23 @@ export default class HierarchyComponent extends LightningElement {
         } else {
             this.selectedItems.set(name, label);
         }
+        this.updateInformationForPillsPanel();
+    }
+
+    handlePillRemoval(event) {
+        const { name: itemName } = event.detail;
+        this.selectedItems.delete(itemName);
+        this.updateInformationForPillsPanel();
+    }
+    updateInformationForPillsPanel() {
+        if (this.selectedItems.size > 0 && !this.anyItemSelected) {
+            this.anyItemSelected = true;
+        } else if (this.selectedItems.size === 0 && this.anyItemSelected) {
+            this.anyItemSelected = false;
+        }
+        this.selectedItemsArray = Array.from(
+            this.selectedItems,
+            ([key, value]) => ({ key, label: value })
+        );
     }
 }

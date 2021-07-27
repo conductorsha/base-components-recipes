@@ -1,0 +1,10 @@
+<template>
+    <template for:each={selectedItems} for:item="element">
+        <lightning-pill
+            key={element.key}
+            label={element.label}
+            name={element.key}
+            onremove={handleRemoveOnly}
+        ></lightning-pill>
+    </template>
+</template>

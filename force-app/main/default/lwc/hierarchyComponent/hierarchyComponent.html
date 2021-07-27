@@ -5,7 +5,7 @@
             size="medium"
         ></lightning-spinner>
     </template>
-    <!-- <template if:false={isTreeLoading}> -->
+
     <c-tree
         items={items}
         header="Records"
@@ -17,5 +17,11 @@
         onselecteditem={handleSectedItem}
     >
     </c-tree>
-    <!-- </template> -->
+    <template if:true={anyItemSelected}>
+        <c-selected-items-panel
+            selected-items={selectedItemsArray}
+            onremovedpill={handlePillRemoval}
+        >
+        </c-selected-items-panel>
+    </template>
 </template>
