@@ -27,6 +27,8 @@ export default class HierarchyComponent extends LightningElement {
 
     async handleToggle(event) {
         let { item, itemName, eventName } = event.detail;
+        // const toExpand = eventName === "expand";
+        // this.updateItemToggleStatus(itemName, toExpand);
         if (eventName === "expand") {
             if (item.children.length === 0) {
                 this.isTreeLoading = true; //
@@ -166,6 +168,7 @@ export default class HierarchyComponent extends LightningElement {
         this.selectedItems.delete(itemName);
         this.updateInformationForPillsPanel();
     }
+
     updateInformationForPillsPanel() {
         if (this.selectedItems.size > 0 && !this.anyItemSelected) {
             this.anyItemSelected = true;
@@ -177,4 +180,17 @@ export default class HierarchyComponent extends LightningElement {
             ([key, value]) => ({ key, label: value })
         );
     }
+
+    // updateItemToggleStatus(itemName, toExpand) {
+    //     const targetItem = this.getItem(this.items, itemName);
+    //     console.log(itemName);
+    //     console.log("My targetItem is: ", targetItem);
+    //     targetItem.expanded = toExpand;
+    // }
+
+    // getItem(searchArray, itemName) {
+    //     let returnItem;
+
+    //     });
+    // }
 }
