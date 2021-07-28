@@ -5,7 +5,7 @@ import getHierarchyRecordsCount from "@salesforce/apex/HierarchyController.getHi
 // import { deepCopy } from "../utilsPrivate/utility";
 export default class HierarchyComponent extends LightningElement {
     @track items = [];
-    recordsLimitPerBatch = 1;
+    recordsLimitPerBatch = 3;
     focusedItemName = null;
     @track recordIdToNumberOfChildPages = new Map();
     @track recordIdToCurrentPage = new Map();
@@ -27,8 +27,8 @@ export default class HierarchyComponent extends LightningElement {
 
     async handleToggle(event) {
         let { item, itemName, eventName } = event.detail;
-        // const toExpand = eventName === "expand";
-        // this.updateItemToggleStatus(itemName, toExpand);
+        const toExpand = eventName === "expand";
+        this.updateItemToggleStatus(itemName, toExpand);
         if (eventName === "expand") {
             if (item.children.length === 0) {
                 this.isTreeLoading = true; //
@@ -117,8 +117,7 @@ export default class HierarchyComponent extends LightningElement {
 
                 return {
                     ...row,
-                    items: items,
-                    expanded: true
+                    items: items
                 };
             }
 
@@ -181,16 +180,23 @@ export default class HierarchyComponent extends LightningElement {
         );
     }
 
-    // updateItemToggleStatus(itemName, toExpand) {
-    //     const targetItem = this.getItem(this.items, itemName);
-    //     console.log(itemName);
-    //     console.log("My targetItem is: ", targetItem);
-    //     targetItem.expanded = toExpand;
-    // }
+    updateItemToggleStatus(itemName, toExpand) {
+        const targetItem = this.getItem(this.items, itemName);
+        targetItem.expanded = toExpand;
+    }
 
-    // getItem(searchArray, itemName) {
-    //     let returnItem;
-
-    //     });
-    // }
+    getItem(searchArray, itemName) {
+        let foundItem = null;
+        for (let item of searchArray) {
+            if (item.name === itemName) {
+                foundItem = item;
+            } else if (item.items && item.items.length > 0) {
+                foundItem = this.getItem(item.items, itemName);
+            }
+            if (foundItem) {
+                break;
+            }
+        }
+        return foundItem;
+    }
 }
